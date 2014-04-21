@@ -46,15 +46,15 @@ def player_death(event_var):
     victim = str(event_var['es_steamid'])
     print("victim: %s" % victim)
     
-    attacker = str(event_var['es_attackersteamid'])
+    attacker = str(event_var['attacker'])
     print("attacker: %s" % attacker)
     
     if attacker == 'BOT' or victim == 'BOT':
         print "Error 1: Bot Encountered"
     else:
         victim_64 = str(convertSteamIDToCommunityID(victim))
-        attacker_64 = str(convertSteamIDToCommunityID(attacker))
-        kick_player, v_balance, a_balance = leetcoin_client.recordKill(victim_64, attacker_64)
+        #attacker_64 = str(convertSteamIDToCommunityID(attacker))
+        kick_player, v_balance, a_balance = leetcoin_client.recordKill(victim_64, attacker)
         es_player = str(event_var['userid'])
         getBalance(es_player)
 

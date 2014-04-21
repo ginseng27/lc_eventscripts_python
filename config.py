@@ -4,7 +4,7 @@ shared_secret = "xxxxxxxxxxxxxxxxxxxxxxxxxx" # These can be obtained in the deve
 
 ## Awards
 award_defuse_bomb = True
-award_defuse_bomb_title = "Bomb Diffused"
+award_defuse_bomb_title = "Bomb Defused"
 award_defuse_bomb_amount = "1000"
 
 award_plant_bomb = True

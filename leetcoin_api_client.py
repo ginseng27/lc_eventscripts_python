@@ -171,18 +171,20 @@ class LeetCoinAPIClient():
     def notifyActivePlayersChanged(self):
         self.active_players_changed = True
 
-    def recordKill(self, victim_64, attacker_64):
+    def recordKill(self, victim_64, attacker_id):
         """ Add a kill to the kill record """
         if self.debug:
-            print("[1337] [recordKill] Recording kill.  %s killed %s" %(attacker_64, victim_64))
+            print("[1337] [recordKill] Recording kill.  %s killed %s" %(attacker_id, victim_64))
             print("[1337] [recordKill] kill reward: %s" %self.kill_reward)
             print("[1337] [recordKill] increment btc: %s" %self.incrementBTC)
             
         v_index, victim = self.getPlayerObjByPlatformID(victim_64)
-        a_index, attacker = self.getPlayerObjByPlatformID(attacker_64)
+        
+        a_index, attacker = self.getPlayerObjByUserid(attacker_id)
+        #a_index, attacker = self.getPlayerObjByPlatformID(attacker_64)
         kick_player = False
         
-        attacker_player = playerlib.getPlayer(attacker.userid)
+        attacker_player = playerlib.getPlayer(attacker_id)
         
         if self.debug:
             print("[1337] [recordKill] Victim Index: %s" %v_index)
@@ -271,7 +273,7 @@ class LeetCoinAPIClient():
                     if self.debug:
                         print ("[1337] [authorizeActivatePlayer] Player Obj NOT found in player obj list - adding")
                         player_rank = int(player_info['player_rank'])
-                        self.authorizedPlayerObjectList.append(Player(player_info['player_key'], 
+                        player_obj = Player(player_info['player_key'], 
                                                                       player_info['player_platformid'],
                                                                       player_info['player_btchold'],
                                                                       player_info['player_btchold'],
@@ -280,12 +282,16 @@ class LeetCoinAPIClient():
                                                                       True, 
                                                                       player_info['player_name'],
                                                                       userid=userid, 
-                                                                      rank=player_rank))
+                                                                      rank=player_rank)
+                        self.authorizedPlayerObjectList.append(player_obj)
             
             else:
                 if self.debug:
                     print ("[1337] [threadActivatePlayer] Player balance too low.")
                 doKick(userid, "Your balance is too low to play on this server.  Go to leetcoin.com to add more to your balance.", True)
+                
+                thread = ThreadedDeactivatePlayer(player_info['player_platformid'], self, self.encryption, self.debug, False, "low balance")
+                thread.start()
         else:
             if self.debug:
                 print ("[1337] [threadActivatePlayer] Player NOT authorized.")
@@ -295,16 +301,20 @@ class LeetCoinAPIClient():
                     print ("[1337] [threadActivatePlayer] Non-Authorized players are PERMITTED")
             else:
                 doKick(userid, "This server is not authorized for you.  Go to leetcoin.com to authorize it.", True)
+                
+                
+                thread = ThreadedDeactivatePlayer(player_info['player_platformid'], self, self.encryption, self.debug, False, "not authorized")
+                thread.start()
 
     def deactivatePlayer(self, steam_64, kick=False, message="You have been kicked from the server.  Go to leetcoin.com to verify your balance and authorization status."):
         """ Fire off a thread to deactivate the player """
         if self.debug:
             print ("[1337] deactivatePlayer")
-        index, player_obj = self.getPlayerObjByPlatformID(steam_64)
-        if player_obj:
-            thread = ThreadedDeactivatePlayer(steam_64, player_obj, self, self.encryption, self.debug, kick, message)
-            thread.start()
-            threads.append(thread)
+        #index, player_obj = self.getPlayerObjByPlatformID(steam_64)
+        #if player_obj:
+        thread = ThreadedDeactivatePlayer(steam_64,  self, self.encryption, self.debug, kick, message)
+        thread.start()
+        #threads.append(thread)
         
     def threadDectivatePlayer(self, player_info, kick, message):
         """ thread callback containing player_info """
@@ -313,7 +323,8 @@ class LeetCoinAPIClient():
             print ("[1337] [threadDectivatePlayer] player_info: %s"% player_info)
         
         index, player_obj = self.getPlayerObjByKey(player_info['player_key'])
-        player_obj.disconnected = True
+        if player_obj:
+            player_obj.disconnected = True
         if kick:
             if self.debug:
                 print ("[1337] [threadDectivatePlayer] KICKING")
@@ -680,14 +691,14 @@ class ThreadedDeactivatePlayer(threading.Thread):
     """ activate a player
         This thread runs without a lock, and does not get added to the thread list.
     """
-    def __init__(self, platformid, player_obj, apiClient, encryption, debug, kick, message):
+    def __init__(self, platformid, apiClient, encryption, debug, kick, message):
         threading.Thread.__init__(self)
         if debug:
             print("[1337] [ThreadedDeactivatePlayer] init")
 
         self.apiClient = apiClient
         self.platformid = platformid
-        self.player_obj = player_obj
+        #self.player_obj = player_obj
         self.encryption = encryption
         self.debug = debug
         self.kick = kick
@@ -702,8 +713,8 @@ class ThreadedDeactivatePlayer(threading.Thread):
             ("encryption", self.encryption),
             ("nonce", time.time()),
             ("platformid",self.platformid),
-            ("rank", self.player_obj.rank),
-            ("satoshi_balance", self.player_obj.btcBalance),
+            #("rank", self.player_obj.rank),
+            #("satoshi_balance", self.player_obj.btcBalance),
             
         ])
         response = get_https_response(params, uri, self.debug)
