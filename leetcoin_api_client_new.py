@@ -89,6 +89,16 @@ class LeetCoinAPIClient():
         self.encryption = encryption
         self.debug = debug
         self.players_connected = False # track if players are still connected
+
+
+        self.shareddata = SharedData()
+        max_threads = 5
+        # start up the threads.
+        self.workers = []
+        for i in range(0, max_threads):
+            self.workers.append(Workers(i, self.shareddata, debug)
+        for i in self.workers:
+            i.start()
         
         self.totalkills = 0 # track total kills for server
         self.matchkills = 0 # kills for this batched round
@@ -115,7 +125,6 @@ class LeetCoinAPIClient():
             self.allow_non_authorized_players = server_info['allow_non_authorized_players']
         
             self.authorizedPlayerObjectList = []
-            self.shareddata = SharedData()
             
             #self.awardQueue = []
             
@@ -603,7 +612,10 @@ class Worker(threading.Thread):
                     player_obj.btcBalance = player_obj.btcBalance + int(award.amount)
                     if self.debug:
                         print("[1337] [%s] [request_award] new balance: %s" % (self.threadID, player.obj.btcBalance))
-                    tell_all_players ####!!!!!!!!! TODO!!!
+                    #tell_all_players('%s earned: %s Satoshi for: %s' %(player_obj.name, award.amount, award.title))
+                    tell_all_players('%s earned: %s Satoshi for: %s'
+                                      % (player_obj.name, award.amount, award.title))
+                                      
                     
 #        apiClient.threadRequestAward(award_info, award )
 
