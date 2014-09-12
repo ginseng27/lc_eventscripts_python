@@ -79,6 +79,64 @@ class SharedData():
     def get_players_connected(self):
         return self.players_connected
 
+class Award():
+    """ a leetcoin award """
+    def __init__(self, playerKey, playerUserId, playerName, amount, title):
+        self.playerKey = playerKey
+        self.playerUserId = playerUserId
+        self.playerName = playerName
+        self.amount = amount
+        self.title = title
+    def to_dict(self):
+        return ({
+            u'playerKey': self.playerKey,
+            u'playerUserId': self.playerUserId,
+            u'playerName': self.playerName,
+            u'amount': self.amount,
+            u'title': self.title
+        })
+
+class Player():
+    """ a leetcoin player """
+    def __init__(self, key, platformID, btcBalance, btcHold, kills, deaths, player_active, name, userid=0, rank=1600):
+        self.key = key
+        self.platformID = platformID
+        self.btcBalance = btcBalance
+        self.btcHold = btcHold
+        self.kills = kills
+        self.deaths = deaths
+        self.player_active = player_active
+        self.name = name
+        self.disconnected = False
+        self.userid = userid
+        self.rank = rank
+        self.kick = False
+        self.weapon = ""
+        self.activate_timestamp = datetime.datetime.now()
+        self.deactivate_timestamp = datetime.datetime.now()
+    
+    def activate(self, userid, satoshi_balance):
+        self.player_active = True
+        self.userid = userid
+        self.btcBalance = satoshi_balance
+        self.btcHold = satoshi_balance
+        
+    def deactivate(self):
+        self.player_active = False
+        
+    def to_dict(self):
+        return ({
+                u'key': self.key,
+                u'platformID': self.platformID,
+                u'btcBalance': self.btcBalance,
+                u'btcHold': self.btcHold,
+                u'kills': self.kills,
+                u'deaths': self.deaths,
+                u'player_active': self.player_active,
+                u'name': self.name,
+                u'rank': self.rank,
+                u'weapon': self.weapon
+                })
 
 class LeetCoinAPIClient():
 
