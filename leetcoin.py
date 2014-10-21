@@ -61,6 +61,7 @@ def player_death(event_var):
 def player_connect(event_var):
     steam_id = event_var['networkid']
     userid = event_var['userid']
+    print("steam_id: '%s' userid: '%s'" % (steam_id, userid))
     steam_64 = str(convertSteamIDToCommunityID(steam_id))
     print("player connected - steamid: %s, userid: %s" % (steam_64, userid))
     authorized_active_player = leetcoin_client.authorizeActivatePlayer(steam_64, userid)
@@ -97,8 +98,9 @@ def getRank(es_player=None):
 
 # Covnert Steam ID to Steam64
 def convertSteamIDToCommunityID(steamID):
+    print "convertSteamIDToCommunityID, steamID: %s" % steamID
     steamIDParts = re.split(":", steamID)
-    communityID = int(steamIDParts[2]) * 2
+    communityID = int(steamIDParts[2].strip("]")) * 2
     if steamIDParts[1] == "1":
         communityID += 1
     communityID += steamIDBase
